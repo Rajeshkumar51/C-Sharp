@@ -5,35 +5,43 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace WebApplication1.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     public class BeginnerController : ControllerBase
     {
-        private static readonly string[] Foods = { "Pizza", "Burger", "Dosa", "Pasta" };
-
-        [HttpGet("greet")]
-        public IActionResult Greet(string name, int age)
-        {
-            string message = $"Hello {name}, you are {age} years old.";
-            message += age < 18 ? " You're a minor." : " You're an adult.";
-            return Ok(new { message });
-        }
+        private static readonly List<string> Foods = new List<string> { "Pizza", "Burger", "Dosa", "Pasta" };
 
         [HttpGet("menu")]
         public IActionResult GetMenu()
         {
-            var menu = Foods.Select((item, index) => new { id = index + 1, name = item });
-            return Ok(menu);
+            return Ok(Foods);
         }
 
-        [HttpGet("select")]
-        public IActionResult SelectFood(int choice)
+        [HttpPost("menu/add")]
+        public IActionResult AddFood([FromQuery] string item)
         {
-            if (choice < 1 || choice > Foods.Length)
-                return BadRequest("Invalid choice!");
-            return Ok($"You selected: {Foods[choice - 1]}");
+            if (string.IsNullOrWhiteSpace(item))
+            {
+                return BadRequest("Food item cannot be empty.");
+            }
+
+            Foods.Add(item);
+            return Ok(new { message = $"{item} added to the menu.", menu = Foods });
         }
+        [HttpDelete("menu/delete")]
+public IActionResult DeleteFood(string item)
+{
+    var itemIndex = Foods.FindIndex(f => f.Equals(item, StringComparison.OrdinalIgnoreCase));
+    
+    if (itemIndex == -1)
+        return NotFound($"{item} not found in the menu.");
+
+    Foods.RemoveAt(itemIndex);
+    return Ok($"{item} has been removed from the menu.");
+}
+
     }
 }
